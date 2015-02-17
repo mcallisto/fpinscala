@@ -42,18 +42,17 @@ object Tree {
   }
   
   // Exercise 29: Generalize size, maximum, depth, and map, writing a new function fold
-  def fold[A, B](t: Tree[A])(l: A => B)(b: (B,B) => B): B = t match {
+  def fold[A, B](t: Tree[A])(l: A ⇒ B)(b: (B,B) ⇒ B): B = t match {
     case Leaf(v) ⇒ l(v)
     case Branch(left, right) ⇒ b(fold(left)(l)(b), fold(right)(l)(b))
   }
   
-  def sizeF[A](t: Tree[A]): Int = fold(t)(x => 1)((x, y) ⇒ x + y)
+  def sizeF[A](t: Tree[A]): Int = fold(t)(x ⇒ 1)((x, y) ⇒ x + y)
 
   def maximumF(t: Tree[Int]): Int = fold(t)(identity)(_ max _)
 
-  def depthF[A](t: Tree[A]): Int = fold(t)(x => 1)((x, y) ⇒ (x max y) + 1)
+  def depthF[A](t: Tree[A]): Int = fold(t)(x ⇒ 1)((x, y) ⇒ (x max y) + 1)
     
-//  def map[A, B](l: List[A])(f: A ⇒ B): List[B] = foldRight(l, Nil: List[B])((x, y) ⇒ Cons(f(x), y))
-//  def map2[A, B](t: Tree[A])(f: A ⇒ B): Tree[B] = fold(t, Nel: Tree[B])((x, y) ⇒ Branch(Leaf(f(x)), y))
+  def mapF[A, B](t: Tree[A])(f: A ⇒ B): Tree[B] = fold(t)(x ⇒ Leaf(f(x)): Tree[B])((x, y) ⇒ Branch(x, y))
 
 }

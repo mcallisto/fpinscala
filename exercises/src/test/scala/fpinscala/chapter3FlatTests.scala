@@ -92,6 +92,7 @@ class chapter3FlatTests extends FlatSpec {
     assert(Tree.depthF(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2)))) == 5)
     assert(Tree.depthF(Leaf(3)) == 1)
     assert(Tree.depthF(Branch(Leaf(1), Branch(Leaf(3), Leaf(2)))) == 3)
+    assert(Tree.maximum(Tree.mapF(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2))))(_ + 1)) == 9)
   }
   
 }
