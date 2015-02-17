@@ -82,14 +82,16 @@ class chapter3FlatTests extends FlatSpec {
   } 
   
   it can "be fold-ed" in {
-    assert(Tree.fold(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2))), 0)(_ + _) == 19)
-    assert(Tree.fold(Branch(Leaf("a"), Branch(Branch(Leaf("b"), Branch(Leaf("c"), Leaf("d"))), Leaf("e"))), "-")(_ + _) == "abcde-")
+    assert(Tree.fold(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2))))(identity)(_ + _) == 19)
+    assert(Tree.fold(Branch(Leaf("a"), Branch(Branch(Leaf("b"), Branch(Leaf("c"), Leaf("d"))), Leaf("e"))))(identity)(_ + _) == "abcde")
   } 
   
   "Size, maximum, depth and map tree functions" can "be defined in terms of fold" in {
     assert(Tree.sizeF(Branch(Leaf(1), Branch(Leaf(0), Leaf(2)))) === 3)
     assert(Tree.maximumF(Branch(Leaf(1), Branch(Branch(Leaf(5), Leaf(3)), Leaf(2)))) === 5)
     assert(Tree.depthF(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2)))) == 5)
+    assert(Tree.depthF(Leaf(3)) == 1)
+    assert(Tree.depthF(Branch(Leaf(1), Branch(Leaf(3), Leaf(2)))) == 3)
   }
   
 }
