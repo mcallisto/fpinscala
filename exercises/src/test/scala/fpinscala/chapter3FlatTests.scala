@@ -5,6 +5,9 @@ import org.scalatest.FlatSpec
 class chapter3FlatTests extends FlatSpec {
 
   val List = fpinscala.datastructures.List
+  val Tree = fpinscala.datastructures.Tree
+  val Leaf = fpinscala.datastructures.Leaf
+  val Branch = fpinscala.datastructures.Branch
 
   "A list" can "be concatenated" in {
     assert(List.concatenate(List(List(1, 2, 3), List(4, 5, 6), List(7, 8))) === List(1, 2, 3, 4, 5, 6, 7, 8))
@@ -59,4 +62,34 @@ class chapter3FlatTests extends FlatSpec {
     assert(List.hasSubsequence(l, List(3, 2)) === false)
   } 
 
+  "A tree of [Int]" should "have a maximum" in {
+    assert(Tree.maximum(Branch(Leaf(1), Branch(Branch(Leaf(5), Leaf(3)), Leaf(2)))) === 5)
+  }
+  
+  "A tree" should "have a size equal to the number of leaves" in {
+    assert(Tree.size(Branch(Leaf(1), Branch(Leaf(0), Leaf(2)))) === 3)
+    assert(Tree.size(Leaf(2)) === 1)
+  }
+
+  it should "have a depth" in {
+    assert(Tree.depth(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2)))) == 5)
+    assert(Tree.depth(Leaf(3)) == 1)
+    assert(Tree.depth(Branch(Leaf(1), Branch(Leaf(3), Leaf(2)))) == 3)
+  } 
+  
+  it can "be map-ped" in {
+    assert(Tree.maximum(Tree.map(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2))))(_ + 1)) == 9)
+  } 
+  
+  it can "be fold-ed" in {
+    assert(Tree.fold(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2))), 0)(_ + _) == 19)
+    assert(Tree.fold(Branch(Leaf("a"), Branch(Branch(Leaf("b"), Branch(Leaf("c"), Leaf("d"))), Leaf("e"))), "-")(_ + _) == "abcde-")
+  } 
+  
+  "Size, maximum, depth and map tree functions" can "be defined in terms of fold" in {
+    assert(Tree.sizeF(Branch(Leaf(1), Branch(Leaf(0), Leaf(2)))) === 3)
+    assert(Tree.maximumF(Branch(Leaf(1), Branch(Branch(Leaf(5), Leaf(3)), Leaf(2)))) === 5)
+    assert(Tree.depthF(Branch(Leaf(1), Branch(Branch(Leaf(5), Branch(Leaf(8), Leaf(3))), Leaf(2)))) == 5)
+  }
+  
 }
