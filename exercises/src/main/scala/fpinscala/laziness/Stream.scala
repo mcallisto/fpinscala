@@ -49,13 +49,13 @@ trait Stream[+A] {
   def takeWhile(p: A ⇒ Boolean): Stream[A] = this match {
     case Empty                  ⇒ empty
     case Cons(h, t) if (p(h())) ⇒ cons(h(), t() takeWhile(p))
-    case Cons(_, t)             ⇒ t() takeWhile(p)
+    case _                      ⇒ empty
   }
   
   // EXERCISE 5: Use foldRight to implement takeWhile. This will construct a stream incrementally,
   // and only if the values in the result are demanded by some other expression.  
   def takeWhileR(p: A ⇒ Boolean): Stream[A] =
-    foldRight(Stream(): Stream[A])((a, b) => if (p(a)) cons(a, b.takeWhileR(p)) else b.takeWhileR(p))
+    foldRight(Stream(): Stream[A])((a, b) => if (p(a)) cons(a, b) else empty)
   
   // EXERCISE 4: Implement forAll, which checks that all elements in the
   // Stream match a given predicate. Your implementation should terminate the
@@ -63,6 +63,19 @@ trait Stream[+A] {
   def forAll(p: A ⇒ Boolean): Boolean =
     foldRight(true)((a, b) ⇒ p(a) && b)
 
+  // EXERCISE 6: Implement map, filter, append, and flatMap using foldRight.
+  def map[B](f: A ⇒ B): Stream[B] =
+    foldRight(empty[B])((a, b) ⇒ cons(f(a), b))
+    
+  def filter(p: A ⇒ Boolean): Stream[A] =
+    foldRight(empty[A])((a, b) ⇒ if (p(a)) cons(a, b) else b)    
+    
+  def append[B >: A](b: Stream[B]): Stream[B] =
+    foldRight(b)(cons(_, _))
+    
+  def flatMap[B](f: A ⇒ Stream[B]): Stream[B] =
+    foldRight(empty[B])((a, b) ⇒ f(a) append b)
+    
   def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
 }
 
