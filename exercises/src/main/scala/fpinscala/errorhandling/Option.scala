@@ -78,8 +78,43 @@ object Option {
 //      case Some(x) ⇒ b map(y ⇒ f(x, y))
 //      case None ⇒ None
 //    }
+  
+  // EXERCISE 4: Re-implement bothMatch above in terms of map2, to the extent possible.
+  //  def bothMatch_1(pat: String, pat2: String, s: String): Option[Boolean] =
+  //    mkMatcher(pat) flatMap (f => mkMatcher(pat2) map (g => f(s) && g(s)))
+  def bothMatch(pat: String, pat2: String, s: String)(f: String ⇒ Option[Boolean]): Option[Boolean] =
+    map2(f(pat), f(pat2))(_ && _)
 
-  def sequence[A](a: List[Option[A]]): Option[List[A]] = sys.error("todo")
+  // EXERCISE 5: Write a function sequence, that combines a list of Options
+  // into one option containing a list of all the Some values in the original list.
+  // If the original list contains None even once, the result of the function should be None,
+  // otherwise the result should be Some with a list of all the values.
+  // This is a clear instance where it's not possible to define the function in the OO style.
+  // This should not be a method on List (which shouldn't need to know anything about Option),
+  // and it can't be a method on Option.
+  // Break the list out using pattern-matching
+  // where there will be a recursive call to `sequence` in the cons case.
+  // Alternatively, use the `foldRight` method to take care of the recursion for you.
+  def sequence[A](a: List[Option[A]]): Option[List[A]] = {
+    a.foldRight(Some(Nil): Option[List[A]])((x, y) => map2(x, y)(_ :: _))    
+//    def go[A](a: List[Option[A]], acc: Option[List[A]]): Option[List[A]] = a match {
+//      case Nil => acc
+//      case x :: xs => go(xs, map2(x, acc)((j, k) => j :: k))
+//    }
+//    
+//    go(a, Some(List()): Option[List[A]])
+  }
 
-  def traverse[A, B](a: List[A])(f: A ⇒ Option[B]): Option[List[B]] = sys.error("todo")
+  // EXERCISE 6: Implement the traverse function.
+  // It is straightforward to do using map and sequence,
+  // but try for a more efficient implementation that only looks at the list once.
+  // In fact, implement sequence in terms of traverse.
+  def traverse[A, B](a: List[A])(f: A ⇒ Option[B]): Option[List[B]] = {
+//    sequence(a map f)
+    a.foldRight(Some(Nil): Option[List[B]])((x, y) => map2(f(x), y)(_ :: _))
+  }
+  
+  def sequence2[A](a: List[Option[A]]): Option[List[A]] =
+    traverse(a)(identity)
+
 }
