@@ -62,9 +62,6 @@ object Option {
   // EXERCISE 2: Implement the variance function
   // (if the mean is m, variance is the mean of math.pow(x - m, 2), see definition)
   // in terms of mean and flatMap
-  // Footnote: Variance can actually be computed in one pass, but for pedagogical purposes
-  // we will compute it using two passes. The first will compute the mean of the data set,
-  // and the second will compute the mean squared difference from this mean.  
   def variance(xs: Seq[Double]): Option[Double] = {
     mean(xs) flatMap (m ⇒ mean(xs map (x ⇒ math.pow(x - m, 2))))
 //    mean(xs) match {
@@ -73,7 +70,14 @@ object Option {
 //    }
   }
 
-  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) ⇒ C): Option[C] = sys.error("todo")
+  // EXERCISE 3: Write a generic function map2, that combines two Option values using a binary function.
+  // If either Option value is None, then the return value is too.
+  def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) ⇒ C): Option[C] =
+    a flatMap (x ⇒ b map(y ⇒ f(x, y)))
+//    a match {
+//      case Some(x) ⇒ b map(y ⇒ f(x, y))
+//      case None ⇒ None
+//    }
 
   def sequence[A](a: List[Option[A]]): Option[List[A]] = sys.error("todo")
 
