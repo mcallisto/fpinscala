@@ -44,9 +44,24 @@ trait Stream[+A] {
 
   def drop(n: Int): Stream[A] = sys.error("todo")
 
-  def takeWhile(p: A ⇒ Boolean): Stream[A] = sys.error("todo")
-
-  def forAll(p: A ⇒ Boolean): Boolean = sys.error("todo")
+  // EXERCISE 3: Write the function takeWhile for returning all starting
+  // elements of a Stream that match the given predicate.  
+  def takeWhile(p: A ⇒ Boolean): Stream[A] = this match {
+    case Empty                  ⇒ empty
+    case Cons(h, t) if (p(h())) ⇒ cons(h(), t() takeWhile(p))
+    case Cons(_, t)             ⇒ t() takeWhile(p)
+  }
+  
+  // EXERCISE 5: Use foldRight to implement takeWhile. This will construct a stream incrementally,
+  // and only if the values in the result are demanded by some other expression.  
+  def takeWhileR(p: A ⇒ Boolean): Stream[A] =
+    foldRight(Stream(): Stream[A])((a, b) => if (p(a)) cons(a, b.takeWhileR(p)) else b.takeWhileR(p))
+  
+  // EXERCISE 4: Implement forAll, which checks that all elements in the
+  // Stream match a given predicate. Your implementation should terminate the
+  // traversal as soon as it encounters a non-matching value.
+  def forAll(p: A ⇒ Boolean): Boolean =
+    foldRight(true)((a, b) ⇒ p(a) && b)
 
   def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
 }

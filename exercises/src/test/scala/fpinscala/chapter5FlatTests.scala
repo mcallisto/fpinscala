@@ -16,4 +16,14 @@ class chapter5FlatTests extends FlatSpec {
     assert(x.take(2).toList === List(1, 2))
   }
   
+  it can "can be reduced with a conditional take" in {
+    assert(x.takeWhile(_ % 2 == 0).toList === List(2, 4))
+    assert(x.takeWhileR(_ % 2 == 0).toList === List(2, 4))
+  }
+  
+  it can "can be checked with forall" in {
+    assert(x.forAll(_ % 2 == 0) === false)
+    assert(x.forAll(_ < 5) === true)
+  }
+  
 }
