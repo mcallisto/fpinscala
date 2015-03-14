@@ -15,20 +15,23 @@ sealed trait Option[+A] {
     case None ⇒ default
   }
   
-  def flatMap[B](f: A ⇒ Option[B]): Option[B] = this match {
-    case Some(x) ⇒ f(x)
-    case None ⇒ None
-  }
+  def flatMap[B](f: A ⇒ Option[B]): Option[B] = map(f) getOrElse None
+//  this match {
+//    case Some(x) ⇒ f(x)
+//    case None ⇒ None
+//  }
 
-  def orElse[B >: A](ob: ⇒ Option[B]): Option[B] = this match {
-    case Some(_) ⇒ this
-    case None ⇒ ob
-  }
+  def orElse[B >: A](ob: ⇒ Option[B]): Option[B] = map(Some(_)) getOrElse ob 
+//  this match {
+//    case Some(_) ⇒ this
+//    case None ⇒ ob
+//  }
 
-  def filter(f: A ⇒ Boolean): Option[A] = this match {
-    case Some(x) ⇒ if (f(x)) this else None
-    case None ⇒ None
-  }
+  def filter(f: A ⇒ Boolean): Option[A] = flatMap(x ⇒ if (f(x)) Some(x) else None)
+//  this match {
+//    case Some(x) if (f(x)) ⇒ this
+//    case _ ⇒ None
+//  }
 }
 
 case class Some[+A](get: A) extends Option[A]
@@ -56,7 +59,20 @@ object Option {
     if (xs.isEmpty) None
     else Some(xs.sum / xs.length)
 
-  def variance(xs: Seq[Double]): Option[Double] = sys.error("todo")
+  // EXERCISE 2: Implement the variance function
+  // (if the mean is m, variance is the mean of math.pow(x - m, 2), see definition)
+  // in terms of mean and flatMap
+  // Footnote: Variance can actually be computed in one pass, but for pedagogical purposes
+  // we will compute it using two passes. The first will compute the mean of the data set,
+  // and the second will compute the mean squared difference from this mean.  
+  def variance(xs: Seq[Double]): Option[Double] = {
+    mean(xs) match {
+//      case Some(m) => xs flatMap (x => mean(math.pow(x - m, 2)))
+      case Some(m) => mean(xs map (x => math.pow(x - m, 2)))
+      case None => None
+    }
+    
+  }
 
   def map2[A, B, C](a: Option[A], b: Option[B])(f: (A, B) ⇒ C): Option[C] = sys.error("todo")
 
