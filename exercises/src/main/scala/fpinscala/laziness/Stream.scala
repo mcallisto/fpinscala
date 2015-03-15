@@ -41,7 +41,7 @@ trait Stream[+A] {
     case _ if (n < 1) ⇒ empty
     case Cons(h, t)   ⇒ cons(h(), t() take(n - 1))
   }
-
+  
   def drop(n: Int): Stream[A] = sys.error("todo")
 
   // EXERCISE 3: Write the function takeWhile for returning all starting
@@ -66,7 +66,7 @@ trait Stream[+A] {
   // EXERCISE 6: Implement map, filter, append, and flatMap using foldRight.
   def map[B](f: A ⇒ B): Stream[B] =
     foldRight(empty[B])((a, b) ⇒ cons(f(a), b))
-    
+
   def filter(p: A ⇒ Boolean): Stream[A] =
     foldRight(empty[A])((a, b) ⇒ if (p(a)) cons(a, b) else b)    
     
@@ -76,6 +76,25 @@ trait Stream[+A] {
   def flatMap[B](f: A ⇒ Stream[B]): Stream[B] =
     foldRight(empty[B])((a, b) ⇒ f(a) append b)
     
+  // EXERCISE 12: Use unfold to implement map, take, takeWhile, zip and zipAll.
+  // The zipAll function should continue the traversal as long as either stream has more elements
+  // it uses Option to indicate whether each stream has been exhausted.      
+  def mapU[B](f: A ⇒ B): Stream[B] =
+    unfold(this)(_ match {
+      case Cons(h, t) ⇒ Some(f(h()), t())
+      case Empty      ⇒ None
+    })
+        
+  def takeU(n: Int): Stream[A] =    
+    unfold((this, n))(_ match {
+      case (tt, nn) ⇒
+        if (nn < 1) None
+        else tt match {
+          case Cons(h, t) ⇒ Some(h(), (t(), nn - 1))
+          case Empty      ⇒ None
+        }
+    })
+      
   def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
 }
 

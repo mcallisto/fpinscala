@@ -14,6 +14,7 @@ class chapter5FlatTests extends FlatSpec {
   
   it can "be reduced with take" in {
     assert(x.take(2).toList === List(1, 2))
+    assert(x.takeU(2).toList === List(1, 2))
   }
   
   it can "be reduced with a conditional take" in {
@@ -28,6 +29,7 @@ class chapter5FlatTests extends FlatSpec {
   
   it can "be mapped" in {
     assert(x.map(_ + 1).toList === List(2, 3, 4, 5))
+    assert(x.mapU(_ + 1).toList === List(2, 3, 4, 5))
   }
   
   it can "be filtered" in {
