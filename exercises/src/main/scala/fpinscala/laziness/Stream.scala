@@ -113,6 +113,22 @@ object Stream {
 
      Stream(0, 1).append(go(0, 1))
   }  
+  
+  // EXERCISE 10: We can write a more general stream building function.
+  // It takes an initial state, and a function for producing both the next state
+  // and the next value in the generated stream. 
+  // Option is used to indicate when the Stream should be terminated, if at all.
+  def unfold[A, S](z: S)(f: S ⇒ Option[(A, S)]): Stream[A] = f(z) match {
+    case None         ⇒ empty
+    case Some((a, s)) ⇒ cons(a, unfold(s)(f))
+  }
+  
+  def fromU(n: Int): Stream[Int] = unfold(n)(x ⇒ Some(x, x + 1))
+  
+  // EXERCISE 11: Write fibs, from, constant, and ones in terms of unfold.
+  def fibsU(): Stream[Int] = 
+    Stream(0, 1) append unfold((0, 1))(_ match {
+      case (beforelast, last) ⇒ Some(beforelast + last, (last, beforelast + last)) 
+    })
 
-  def unfold[A, S](z: S)(f: S ⇒ Option[(A, S)]): Stream[A] = sys.error("todo")
 }

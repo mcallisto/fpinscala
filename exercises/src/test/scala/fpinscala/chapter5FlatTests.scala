@@ -48,10 +48,12 @@ class chapter5FlatTests extends FlatSpec {
   
   it can "be a stream of integers infinitely growing" in {
     assert(Stream.from(1).take(4).toList === List(1, 2, 3, 4))
+    assert(Stream.fromU(1).take(4).toList === List(1, 2, 3, 4))
   }
   
   it can "be an infinite stream of Fibonacci numbers" in {
     assert(Stream.fibs().take(7).toList === List(0, 1, 1, 2, 3, 5, 8))
+    assert(Stream.fibsU().take(7).toList === List(0, 1, 1, 2, 3, 5, 8))
   }
   
 }
