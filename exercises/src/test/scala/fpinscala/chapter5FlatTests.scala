@@ -12,34 +12,46 @@ class chapter5FlatTests extends FlatSpec {
     assert(x.toList === List(1, 2, 3, 4))
   }
   
-  it can "can be reduced with take" in {
+  it can "be reduced with take" in {
     assert(x.take(2).toList === List(1, 2))
   }
   
-  it can "can be reduced with a conditional take" in {
+  it can "be reduced with a conditional take" in {
     assert(x.takeWhile(_ % 2 != 0).toList === List(1))
     assert(x.takeWhileR(_ % 2 != 0).toList === List(1))
   }
   
-  it can "can be checked with forall" in {
+  it can "be checked with forall" in {
     assert(x.forAll(_ % 2 == 0) === false)
     assert(x.forAll(_ < 5) === true)
   }
   
-  it can "can be mapped" in {
+  it can "be mapped" in {
     assert(x.map(_ + 1).toList === List(2, 3, 4, 5))
   }
   
-  it can "can be filtered" in {
+  it can "be filtered" in {
     assert(x.filter(_ % 2 == 0).toList === List(2, 4))
   }
   
-  it can "can have another stream appended" in {
+  it can "have another stream appended" in {
     assert(x.append(x).toList === List(1, 2, 3, 4, 1, 2, 3, 4))
   }
   
-  it can "can be flat mapped" in {
+  it can "be flat mapped" in {
     assert(x.flatMap(x => Stream(x + 1)).toList === List(2, 3, 4, 5))
+  }
+  
+  it can "be a costant streamed infinitely" in {
+    assert(Stream.constant(5).take(4).toList === List(5, 5, 5, 5))
+  }
+  
+  it can "be a stream of integers infinitely growing" in {
+    assert(Stream.from(1).take(4).toList === List(1, 2, 3, 4))
+  }
+  
+  it can "be an infinite stream of Fibonacci numbers" in {
+    assert(Stream.fibs().take(7).toList === List(0, 1, 1, 2, 3, 5, 8))
   }
   
 }

@@ -50,7 +50,6 @@ object MyModule {
     go(1, start)
   }
 
-
   // This definition and `formatAbs` are very similar..
   private def formatFactorial(n: Int) = {
     val msg = "The factorial of %d is %d."
