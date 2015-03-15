@@ -107,7 +107,7 @@ object Stream {
   
   // EXERCISE 9: Write a function fibs that generates the infinite stream of
   // Fibonacci numbers: 0, 1, 1, 2, 3, 5, 8, and so on.
-  def fibs(): Stream[Int] = {  
+  val fibs: Stream[Int] = {  
      def go(beforelast: Int, last: Int): Stream[Int] =
        cons(beforelast + last, go(last, beforelast + last))
 
@@ -123,12 +123,16 @@ object Stream {
     case Some((a, s)) ⇒ cons(a, unfold(s)(f))
   }
   
-  def fromU(n: Int): Stream[Int] = unfold(n)(x ⇒ Some(x, x + 1))
-  
   // EXERCISE 11: Write fibs, from, constant, and ones in terms of unfold.
-  def fibsU(): Stream[Int] = 
+  val fibsU: Stream[Int] = 
     Stream(0, 1) append unfold((0, 1))(_ match {
       case (beforelast, last) ⇒ Some(beforelast + last, (last, beforelast + last)) 
     })
+  
+  def fromU(n: Int): Stream[Int] = unfold(n)(x ⇒ Some(x, x + 1))
+  
+  def constantU(n: Int): Stream[Int] = unfold(n)(x ⇒ Some(x, x))
 
+  val onesU: Stream[Int] = unfold(1)(x ⇒ Some(x, x))
+  
 }
