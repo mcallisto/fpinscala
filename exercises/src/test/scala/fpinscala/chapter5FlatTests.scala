@@ -68,4 +68,25 @@ class chapter5FlatTests extends FlatSpec {
     assert(x.zipAll(Stream(4, 6, 8)).toList === List((Some(1), Some(4)), (Some(2), Some(6)), (Some(3), Some(8)), (Some(4), None)))
   }
   
+  it can "be checked if starts with another stream" in {
+    assert(x.startsWith(Stream(1, 2, 3)))
+    assert(x.startsWith(x))
+    assert(x.startsWith(Stream(1, 2, 3, 4, 5)) === false)
+    assert(x.startsWith(Stream(1, 2, 5)) === false)
+  }
+  
+  it can "be reduced with drop" in {
+    assert(x.drop(2).toList === List(3, 4))
+  }  
+  
+  it can "be converted into stream of tails" in {
+    assert(x.tails.map(_.toList).toList ===
+      List(List(1, 2, 3, 4), List(2, 3, 4), List(3, 4), List(4), List()))
+  }  
+  
+  it can "be checked if contains a subsequence" in {
+    assert(x.hasSubsequence(Stream(2, 3)))
+    assert(x.hasSubsequence(Stream(2, 4)) == false)
+  }  
+  
 }

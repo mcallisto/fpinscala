@@ -42,7 +42,11 @@ trait Stream[+A] {
     case Cons(h, t)   ⇒ cons(h(), t() take(n - 1))
   }
   
-  def drop(n: Int): Stream[A] = sys.error("todo")
+  def drop(n: Int): Stream[A] = this match {
+    case Empty                 ⇒ empty
+    case Cons(h, t) if (n > 0) ⇒ t() drop(n - 1)
+    case x                     ⇒ x
+  }
 
   // EXERCISE 3: Write the function takeWhile for returning all starting
   // elements of a Stream that match the given predicate.  
@@ -55,7 +59,7 @@ trait Stream[+A] {
   // and only if the values in the result are demanded by some other expression.  
   def takeWhileR(p: A ⇒ Boolean): Stream[A] =
     foldRight(Stream(): Stream[A])((a, b) => if (p(a)) cons(a, b) else empty)
-        
+
   // EXERCISE 4: Implement forAll, which checks that all elements in the
   // Stream match a given predicate. Your implementation should terminate the
   // traversal as soon as it encounters a non-matching value.
@@ -100,21 +104,41 @@ trait Stream[+A] {
       case _                      ⇒ None
     })
     
-  def zip[B](b: Stream[B]): Stream[(A, B)] =
-    unfold((this, b))(_ match {
+  def zip[B](s: Stream[B]): Stream[(A, B)] =
+    unfold((this, s))(_ match {
       case (Cons(h, t), Cons(bh, bt)) ⇒ Some((h(), bh()), (t(), bt()))
       case _                          ⇒ None
     })
     
-  def zipAll[B](b: Stream[B]): Stream[(Option[A], Option[B])] =
-    unfold((this, b))(_ match {
-      case (Empty, Empty)             ⇒ None
-      case (Cons(h, t), Cons(bh, bt)) ⇒ Some((Some(h()), Some(bh())), (t(),   bt()))
-      case (Empty, Cons(bh, bt))      ⇒ Some((None,      Some(bh())), (Empty, bt()))
+  def zipAll[B](s: Stream[B]): Stream[(Option[A], Option[B])] =
+    unfold((this, s))(_ match {
+      case (Empty,      Empty)        ⇒ None
+      case (Cons(h, t), Cons(sh, st)) ⇒ Some((Some(h()), Some(sh())), (t(),   st()))
+      case (Empty,      Cons(sh, st)) ⇒ Some((None,      Some(sh())), (Empty, st()))
       case (Cons(h, t), Empty)        ⇒ Some((Some(h()), None),       (t(),   Empty))
     })
+
+  // EXERCISE 13: implement startsWith using functions you've written.
+  // It should check if one Stream is a prefix of another.
+  // For instance, Stream(1,2,3) starsWith Stream(1,2) would be true.
+  def startsWith[B](s: Stream[B]): Boolean =
+    zip(s).toList == s.zip(s).toList
     
-  def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
+  // EXERCISE 14: implement tails using unfold.
+  // For a given Stream, tails returns the Stream of suffixes of the input sequence,
+  // starting with the original Stream. So, given Stream(1,2,3),
+  // it would return Stream(Stream(1,2,3), Stream(2,3), Stream(3), Stream.empty).
+  def tails: Stream[Stream[A]] = 
+    unfold(Stream(this))(_ match {
+      case Empty      ⇒ None
+      case Cons(h, _) ⇒ h() match {
+        case Empty ⇒ Some(Stream(), Empty)
+        case _     ⇒ Some(h(), Stream(h().drop(1)))
+      }
+    })
+    
+  def hasSubsequence[A](s: Stream[A]): Boolean =
+    tails exists (_.startsWith(s))    
 }
 
 case object Empty extends Stream[Nothing]
