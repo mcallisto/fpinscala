@@ -20,6 +20,7 @@ class chapter5FlatTests extends FlatSpec {
   it can "be reduced with a conditional take" in {
     assert(x.takeWhile(_ % 2 != 0).toList === List(1))
     assert(x.takeWhileR(_ % 2 != 0).toList === List(1))
+    assert(x.takeWhileU(_ % 2 != 0).toList === List(1))
   }
   
   it can "be checked with forall" in {
@@ -57,6 +58,14 @@ class chapter5FlatTests extends FlatSpec {
   it can "be an infinite stream of Fibonacci numbers" in {
     assert(Stream.fibs.take(7).toList === List(0, 1, 1, 2, 3, 5, 8))
     assert(Stream.fibsU.take(7).toList === List(0, 1, 1, 2, 3, 5, 8))
+  }
+  
+  it can "be zipped" in {
+    assert(x.zip(Stream(4, 6, 8)).toList === List((1, 4), (2, 6), (3, 8)))
+  }
+  
+  it can "be zippedAll" in {
+    assert(x.zipAll(Stream(4, 6, 8)).toList === List((Some(1), Some(4)), (Some(2), Some(6)), (Some(3), Some(8)), (Some(4), None)))
   }
   
 }

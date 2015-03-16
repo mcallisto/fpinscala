@@ -47,7 +47,6 @@ trait Stream[+A] {
   // EXERCISE 3: Write the function takeWhile for returning all starting
   // elements of a Stream that match the given predicate.  
   def takeWhile(p: A ⇒ Boolean): Stream[A] = this match {
-    case Empty                  ⇒ empty
     case Cons(h, t) if (p(h())) ⇒ cons(h(), t() takeWhile(p))
     case _                      ⇒ empty
   }
@@ -56,7 +55,7 @@ trait Stream[+A] {
   // and only if the values in the result are demanded by some other expression.  
   def takeWhileR(p: A ⇒ Boolean): Stream[A] =
     foldRight(Stream(): Stream[A])((a, b) => if (p(a)) cons(a, b) else empty)
-  
+        
   // EXERCISE 4: Implement forAll, which checks that all elements in the
   // Stream match a given predicate. Your implementation should terminate the
   // traversal as soon as it encounters a non-matching value.
@@ -94,7 +93,27 @@ trait Stream[+A] {
           case Empty      ⇒ None
         }
     })
-      
+
+  def takeWhileU[B](p: A ⇒ Boolean): Stream[A] =
+    unfold(this)(_ match {
+      case Cons(h, t) if (p(h())) ⇒ Some(h(), t())
+      case _                      ⇒ None
+    })
+    
+  def zip[B](b: Stream[B]): Stream[(A, B)] =
+    unfold((this, b))(_ match {
+      case (Cons(h, t), Cons(bh, bt)) ⇒ Some((h(), bh()), (t(), bt()))
+      case _                          ⇒ None
+    })
+    
+  def zipAll[B](b: Stream[B]): Stream[(Option[A], Option[B])] =
+    unfold((this, b))(_ match {
+      case (Empty, Empty)             ⇒ None
+      case (Cons(h, t), Cons(bh, bt)) ⇒ Some((Some(h()), Some(bh())), (t(),   bt()))
+      case (Empty, Cons(bh, bt))      ⇒ Some((None,      Some(bh())), (Empty, bt()))
+      case (Cons(h, t), Empty)        ⇒ Some((Some(h()), None),       (t(),   Empty))
+    })
+    
   def startsWith[B](s: Stream[B]): Boolean = sys.error("todo")
 }
 
