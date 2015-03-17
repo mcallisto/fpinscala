@@ -89,4 +89,8 @@ class chapter5FlatTests extends FlatSpec {
     assert(x.hasSubsequence(Stream(2, 4)) == false)
   }  
   
+  it can "be scannedRight" in {
+    assert(Stream(1, 2, 3).scanRight(0)(_ + _).toList === List(6, 5, 3, 0))
+  }  
+  
 }

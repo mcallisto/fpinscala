@@ -83,62 +83,79 @@ trait Stream[+A] {
   // The zipAll function should continue the traversal as long as either stream has more elements
   // it uses Option to indicate whether each stream has been exhausted.      
   def mapU[B](f: A ⇒ B): Stream[B] =
-    unfold(this)(_ match {
+    unfold(this) {
       case Cons(h, t) ⇒ Some(f(h()), t())
       case Empty      ⇒ None
-    })
+    }
         
   def takeU(n: Int): Stream[A] =    
-    unfold((this, n))(_ match {
+    unfold((this, n)) {
       case (tt, nn) ⇒
         if (nn < 1) None
         else tt match {
           case Cons(h, t) ⇒ Some(h(), (t(), nn - 1))
           case Empty      ⇒ None
         }
-    })
+    }
 
   def takeWhileU[B](p: A ⇒ Boolean): Stream[A] =
-    unfold(this)(_ match {
+    unfold(this) {
       case Cons(h, t) if (p(h())) ⇒ Some(h(), t())
       case _                      ⇒ None
-    })
+    }
     
   def zip[B](s: Stream[B]): Stream[(A, B)] =
-    unfold((this, s))(_ match {
+    unfold((this, s)) {
       case (Cons(h, t), Cons(bh, bt)) ⇒ Some((h(), bh()), (t(), bt()))
       case _                          ⇒ None
-    })
+    }
     
   def zipAll[B](s: Stream[B]): Stream[(Option[A], Option[B])] =
-    unfold((this, s))(_ match {
+    unfold((this, s)) {
       case (Empty,      Empty)        ⇒ None
       case (Cons(h, t), Cons(sh, st)) ⇒ Some((Some(h()), Some(sh())), (t(),   st()))
       case (Empty,      Cons(sh, st)) ⇒ Some((None,      Some(sh())), (Empty, st()))
       case (Cons(h, t), Empty)        ⇒ Some((Some(h()), None),       (t(),   Empty))
-    })
+    }
 
   // EXERCISE 13: implement startsWith using functions you've written.
   // It should check if one Stream is a prefix of another.
   // For instance, Stream(1,2,3) starsWith Stream(1,2) would be true.
   def startsWith[B](s: Stream[B]): Boolean =
-    zip(s).toList == s.zip(s).toList
+//    zip(s).toList == s.zip(s).toList
+     zipAll(s).takeWhile(!_._2.isEmpty) forAll { case (h, h2) ⇒ h == h2 }
     
   // EXERCISE 14: implement tails using unfold.
   // For a given Stream, tails returns the Stream of suffixes of the input sequence,
   // starting with the original Stream. So, given Stream(1,2,3),
   // it would return Stream(Stream(1,2,3), Stream(2,3), Stream(3), Stream.empty).
   def tails: Stream[Stream[A]] = 
-    unfold(Stream(this))(_ match {
-      case Empty      ⇒ None
-      case Cons(h, _) ⇒ h() match {
-        case Empty ⇒ Some(Stream(), Empty)
-        case _     ⇒ Some(h(), Stream(h().drop(1)))
-      }
-    })
+//    unfold(Stream(this))(_ match {
+//      case Empty      ⇒ None
+//      case Cons(h, _) ⇒ h() match {
+//        case Empty ⇒ Some(Stream(), Empty)
+//        case _     ⇒ Some(h(), Stream(h().drop(1)))
+//      }
+//    })
+    unfold(this) { 
+      case Empty ⇒ None
+      case s     ⇒ Some((s, s drop 1))
+    } append (Stream(empty))
+    
     
   def hasSubsequence[A](s: Stream[A]): Boolean =
-    tails exists (_.startsWith(s))    
+    tails exists (_.startsWith(s))
+    
+  // EXERCISE 15: Generalize tails to the function scanRight,
+  //  which is like a foldRight that returns a stream of the intermediate results.    
+  def scanRight[B](z: ⇒ B)(f: (A, ⇒ B) ⇒ B): Stream[B] =
+    foldRight((z, Stream(z)))((a, p0) ⇒ {
+      // p0 is passed by-name and used in by-name args in f and cons.
+      // So use lazy val to ensure only one evaluation...
+      lazy val p1 = p0
+      val b2 = f(a, p1._1)
+      (b2, cons(b2, p1._2))
+    })._2
 }
 
 case object Empty extends Stream[Nothing]
