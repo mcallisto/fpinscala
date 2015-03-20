@@ -175,6 +175,20 @@ object State {
     
   def sequenceLeft[S, A](fs: List[State[S, A]]): State[S, List[A]] =
     fs.reverse.foldLeft(unit[S, List[A]](List[A]()))((acc, f) => f.map2(acc)(_ :: _))
+    
+  def modify[S](f: S => S): State[S, Unit] = for {
+    s <- get
+    _ <- set(f(s))
+  } yield ()
+  
+  // EXERCISE 12: Come up with the signatures for get and set, then write their implementations.
+  // A combinator get for getting the current state, and a combinator set for setting a new state
+  def get[S]: State[S, S] =
+    State(s ⇒ (s, s))
+  
+  def set[S](s: S): State[S, Unit] = 
+    State(_ ⇒ ((), s))
+
 }
 
 sealed trait Input
