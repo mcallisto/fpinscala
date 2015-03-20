@@ -137,13 +137,44 @@ object RNG {
     flatMap(ra)(a ⇒ flatMap(rb)(b ⇒ unit(f(a, b))))
 }
 
+import State._
+
+// EXERCISE 11: Generalize the functions unit, map, map2, flatMap, and sequence.
+// Add them as methods on the State case class where possible.
+// Otherwise you should put them in a State companion object.
 case class State[S, +A](run: S ⇒ (A, S)) {
+
   def map[B](f: A ⇒ B): State[S, B] =
-    sys.error("todo")
+    flatMap(a ⇒ unit(f(a)))
+    
   def map2[B, C](sb: State[S, B])(f: (A, B) ⇒ C): State[S, C] =
-    sys.error("todo")
+    sb.flatMap(b ⇒ flatMap(a => unit(f(a, b))))
+//    State(s ⇒ {
+//      val (b, s1) = sb.run(s)
+//      val (a, s2) = run(s1)
+//      (f(a, b), s2)
+//    })
+    
   def flatMap[B](f: A ⇒ State[S, B]): State[S, B] =
-    sys.error("todo")
+    State(s ⇒ {
+      val (a, s1) = run(s)
+      val (b, s2) = f(a).run(s1)
+      (b, s2)
+    })
+  
+}
+
+object State {
+  type Rand[A] = State[RNG, A]
+  
+  def unit[S, A](a: A): State[S, A] =
+    State(s ⇒ (a, s))
+    
+  def sequence[S, A](fs: List[State[S, A]]): State[S, List[A]] =
+    fs.foldRight(unit[S, List[A]](List[A]()))((f, acc) => f.map2(acc)(_ :: _))
+    
+  def sequenceLeft[S, A](fs: List[State[S, A]]): State[S, List[A]] =
+    fs.reverse.foldLeft(unit[S, List[A]](List[A]()))((acc, f) => f.map2(acc)(_ :: _))
 }
 
 sealed trait Input
@@ -152,7 +183,7 @@ case object Turn extends Input
 
 case class Machine(locked: Boolean, candies: Int, coins: Int)
 
-object State {
-  type Rand[A] = State[RNG, A]
-  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
-}
+//object State {
+//  type Rand[A] = State[RNG, A]
+//  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
+//}
