@@ -24,7 +24,7 @@ object Par {
   // in accord with our design choice of having `fork` be the sole function in the API
   // for controlling parallelism. We can always do `fork(map2(a,b)(f))`
   // if we want the evaluation of `f` to occur in a separate thread.
-  def map2[A, B, C](a: Par[A], b: Par[B])(f: (A, B) ⇒ C): Par[C] = 
+  def map2[A, B, C](a: Par[A], b: Par[B])(f: (A, B) ⇒ C): Par[C] =
     (es: ExecutorService) ⇒ {
       val af = a(es)
       val bf = b(es)
@@ -57,12 +57,55 @@ object Par {
   // Here's a simple example: using async, write a function to convert any function A => B
   // to one that evaluates its result asynchronously
   def asyncF[A, B](f: A ⇒ B): A ⇒ Par[B] = a ⇒ fork(unit(f(a)))
-  
+
   def map[A, B](pa: Par[A])(f: A ⇒ B): Par[B] =
     map2(pa, unit(()))((a, _) ⇒ f(a))
 
   def sortPar(parList: Par[List[Int]]) = map(parList)(_.sorted)
 
+  // EXERCISE 5: Implement product and map as primitives, then define map2 in terms of them.
+  // map2 is actually doing two things—
+  // it is creating a parallel computation that waits for the result of two other computations
+  // and then it is combining their results using some function.
+  // We could split this into two functions, product and map
+
+  def product[A, B](fa: Par[A], fb: Par[B]): Par[(A, B)] =
+    (es: ExecutorService) ⇒ {
+      val af = fa(es)
+      val bf = fb(es)
+      UnitFuture((af.get, bf.get))
+    }
+
+  def mapO[A, B](fa: Par[A])(f: A ⇒ B): Par[B] =
+    (es: ExecutorService) ⇒ {
+      val af = fa(es)
+      UnitFuture(f(af.get))
+    }
+
+  def map2O[A, B, C](a: Par[A], b: Par[B])(f: (A, B) ⇒ C): Par[C] =
+    mapO(product(a, b))(_ match { case (aa, bb) => f(aa, bb) })
+
+  // EXERCISE 6: Note that we could always just write parMap as a new primitive.
+  // See if you can implement it this way.
+  // Remember that Par[A] is simply an alias for ExecutorService => Future[A].
+  // Unlike map2, which combines two parallel computations, parMap (let's
+  // call it) needs to combine N parallel computations. Still, it seems like this should
+  // somehow be expressible.
+  def parMapO[A, B](l: List[A])(f: A ⇒ B): Par[List[B]] =
+    (es: ExecutorService) ⇒ UnitFuture(l.map(f))
+
+  // EXERCISE 7: Let's write sequence. No additional primitives are required.  
+  def sequence[A](l: List[Par[A]]): Par[List[A]] =
+    l.foldRight(unit(Nil): Par[List[A]])((x, y) => map2(x, y)(_ :: _))
+  
+  def parMap[A, B](l: List[A])(f: A => B): Par[List[B]] = fork {
+    val fbs: List[Par[B]] = l.map(asyncF(f))
+    sequence(fbs)
+  }
+  
+  // EXERCISE 8: Implement parFilter, which filters elements of a list in parallel.
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = ??? 
+    
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
 
