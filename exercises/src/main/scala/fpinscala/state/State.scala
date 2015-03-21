@@ -108,27 +108,27 @@ object RNG {
   // Implement sequence, for combining a List of transitions into a single transition.
   def sequence[A](fs: List[Rand[A]]): Rand[List[A]] =
     fs.foldRight(unit(List[A]()))((f, acc) => map2(f, acc)(_ :: _))
-//    fs.foldRight(unit(List[A]()))((f, acc) => rng ⇒ {
-//      val (a, rng2) = f(rng)
-//      val (aa, rng3) = acc(rng2)
-//      (a :: aa, rng3)
-//    })
+  //    fs.foldRight(unit(List[A]()))((f, acc) => rng ⇒ {
+  //      val (a, rng2) = f(rng)
+  //      val (aa, rng3) = acc(rng2)
+  //      (a :: aa, rng3)
+  //    })
 
   // Use it to reimplement the ints function you wrote before.
   // You can use the standard library function List.fill(n)(x) to make a list with x repeated n times.
   def intsS(count: Int): Rand[List[Int]] =
     sequence(List.fill(count)(_.nextInt))
-    
+
   // EXERCISE 9: Implement flatMap, then use it to reimplement positiveInt.    
   def flatMap[A, B](f: Rand[A])(g: A ⇒ Rand[B]): Rand[B] =
     rng ⇒ {
       val (a, rng2) = f(rng)
       g(a)(rng2)
     }
-  
+
   def positiveIntF: Rand[Int] =
     flatMap(int)(i ⇒ if (i != Int.MinValue) unit(i.abs) else positiveIntF)
-    
+
   // EXERCISE 10: Reimplement map and map2 in terms of flatMap
   def mapF[A, B](s: Rand[A])(f: A ⇒ B): Rand[B] =
     flatMap(s)(a ⇒ unit(f(a)))
@@ -146,50 +146,56 @@ case class State[S, +A](run: S ⇒ (A, S)) {
 
   def map[B](f: A ⇒ B): State[S, B] =
     flatMap(a ⇒ unit(f(a)))
-    
+
   def map2[B, C](sb: State[S, B])(f: (A, B) ⇒ C): State[S, C] =
     sb.flatMap(b ⇒ flatMap(a => unit(f(a, b))))
-//    State(s ⇒ {
-//      val (b, s1) = sb.run(s)
-//      val (a, s2) = run(s1)
-//      (f(a, b), s2)
-//    })
-    
+  //    State(s ⇒ {
+  //      val (b, s1) = sb.run(s)
+  //      val (a, s2) = run(s1)
+  //      (f(a, b), s2)
+  //    })
+
   def flatMap[B](f: A ⇒ State[S, B]): State[S, B] =
     State(s ⇒ {
       val (a, s1) = run(s)
       val (b, s2) = f(a).run(s1)
       (b, s2)
     })
-  
+
 }
 
 object State {
   type Rand[A] = State[RNG, A]
-  
+
   def unit[S, A](a: A): State[S, A] =
     State(s ⇒ (a, s))
-    
+
   def sequence[S, A](fs: List[State[S, A]]): State[S, List[A]] =
-    fs.foldRight(unit[S, List[A]](List[A]()))((f, acc) => f.map2(acc)(_ :: _))
-    
+    fs.foldRight(unit[S, List[A]](List[A]()))((f, acc) ⇒ f.map2(acc)(_ :: _))
+
   def sequenceLeft[S, A](fs: List[State[S, A]]): State[S, List[A]] =
-    fs.reverse.foldLeft(unit[S, List[A]](List[A]()))((acc, f) => f.map2(acc)(_ :: _))
-    
-  def modify[S](f: S => S): State[S, Unit] = for {
-    s <- get
-    _ <- set(f(s))
+    fs.reverse.foldLeft(unit[S, List[A]](List[A]()))((acc, f) ⇒ f.map2(acc)(_ :: _))
+
+  def modify[S](f: S ⇒ S): State[S, Unit] = for {
+    s ← get
+    _ ← set(f(s))
   } yield ()
-  
+
   // EXERCISE 12: Come up with the signatures for get and set, then write their implementations.
   // A combinator get for getting the current state, and a combinator set for setting a new state
   def get[S]: State[S, S] =
     State(s ⇒ (s, s))
-  
-  def set[S](s: S): State[S, Unit] = 
+
+  def set[S](s: S): State[S, Unit] =
     State(_ ⇒ ((), s))
 
 }
+
+// EXERCISE 13: To gain experience with the use of State,
+// implement a simulation of a simple candy dispenser.
+// The machine has two types of input: You can insert a coin, or you can turn the knob to dispense candy.
+// It can be in one of two states: locked or unlocked.
+// It also tracks how many candies are left and how many coins it contains.
 
 sealed trait Input
 case object Coin extends Input
@@ -197,7 +203,26 @@ case object Turn extends Input
 
 case class Machine(locked: Boolean, candies: Int, coins: Int)
 
-//object State {
-//  type Rand[A] = State[RNG, A]
-//  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
-//}
+// The rules of the machine are as follows:
+// Inserting a coin into a locked machine will cause it to unlock if there is any candy left.
+// Turning the knob on an unlocked machine will cause it to dispense candy and become locked.
+// Turning the knob on a locked machine or inserting a coin into an unlocked machine does nothing.
+// A machine that is out of candy ignores all inputs.
+object Candy {
+
+  // The method simulateMachine should operate the machine based on the list of inputs
+  // and return the number of coins left in the machine at the end.
+  // Note that if the input Machine has 10 coins in it,
+  // and a net total of 4 coins are added in the inputs, the output will be 14.
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] =
+    for {
+      _ ← sequence(inputs.map(i ⇒ modify((s: Machine) ⇒ (i, s) match {
+        case (_,    Machine(_,     0,     _)) ⇒ s
+        case (Coin, Machine(false, _,     _)) ⇒ s
+        case (Turn, Machine(true,  _,     _)) ⇒ s
+        case (Coin, Machine(true,  candy, coin)) ⇒ Machine(false, candy,     coin + 1)
+        case (Turn, Machine(false, candy, coin)) ⇒ Machine(true,  candy - 1, coin)
+      })))
+      s ← get
+    } yield (s.coins, s.candies)
+}
