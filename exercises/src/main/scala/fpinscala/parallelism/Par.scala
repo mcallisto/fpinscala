@@ -40,6 +40,13 @@ object Par {
       // then subtracts that time from the available time allocated for evaluating `bf`.
     }
 
+  def sum(as: IndexedSeq[Int]): Par[Int] =
+    if (as.size <= 1) Par.unit(as.headOption getOrElse 0)
+    else {
+      val (l, r) = as.splitAt(as.length / 2)
+      Par.map2(sum(l), sum(r))(_ + _)
+    }
+
   // This is the simplest and most natural implementation of `fork`, but there are some problems with it
   // --for one, the outer `Callable` will block waiting for the "inner" task to complete.
   // Since this blocking occupies a thread in our thread pool,
@@ -97,15 +104,19 @@ object Par {
   // EXERCISE 7: Let's write sequence. No additional primitives are required.  
   def sequence[A](l: List[Par[A]]): Par[List[A]] =
     l.foldRight(unit(Nil): Par[List[A]])((x, y) => map2(x, y)(_ :: _))
-  
+
   def parMap[A, B](l: List[A])(f: A => B): Par[List[B]] = fork {
     val fbs: List[Par[B]] = l.map(asyncF(f))
     sequence(fbs)
   }
-  
+
   // EXERCISE 8: Implement parFilter, which filters elements of a list in parallel.
-  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = ??? 
-    
+  def parFilter[A](l: List[A])(f: A => Boolean): Par[List[A]] = fork {
+    val pars: List[Par[List[A]]] =
+      l map (asyncF((a: A) => if (f(a)) List(a) else List()))
+    map(sequence(pars))(_.flatten) // convenience method on `List` for concatenating a list of lists
+  }
+
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
 
