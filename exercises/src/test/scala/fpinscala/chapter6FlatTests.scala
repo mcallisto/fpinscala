@@ -41,9 +41,9 @@ class chapter6FlatTests extends FlatSpec {
   }
 
   it can "generate a random Double " in {
-    val (i, r) = RNG.double(seed)
-    val (i2, r2) = RNG.doubleM(r)
-    assert(i !== i2)
+    val (d, r) = RNG.double(seed)
+    val (d2, r2) = RNG.doubleM(r)
+    assert(d !== d2)
   }
 
   it can "generate a random positive Int" in {
@@ -52,8 +52,8 @@ class chapter6FlatTests extends FlatSpec {
   }
 
   it can "generate a list of random Int" in {
-    val (i, r) = RNG.ints(5)(seed)
-    assert(i.forall(_.isValidInt) && i.size == 5)
+    val (l, r) = RNG.ints(5)(seed)
+    assert(l.forall(_.isValidInt) && l.size == 5)
   }
 
   it can "map2 two result" in {
