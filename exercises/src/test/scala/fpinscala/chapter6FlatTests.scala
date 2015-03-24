@@ -5,6 +5,7 @@ import org.scalatest.FlatSpec
 class chapter6FlatTests extends FlatSpec {
 
   val RNG = fpinscala.state.RNG
+  val State = fpinscala.state.State
 
   val seed = RNG.Simple(12234455)
   
@@ -79,4 +80,24 @@ class chapter6FlatTests extends FlatSpec {
     assert(i === 11)
   }
   
+  "Also as a State" can "generate a given value" in {
+    val (i, r) = State.unit(10).run(seed)
+    assert(i === 10)
+  }
+  
+  it can "map a result" in {
+    val (i, r) = State.unit(10).map(_ + 1).run(seed)
+    assert(i === 11)
+  }
+
+//  it can "map2 two results" in {
+//    val (i, r) = State.unit(10).map2(State.unit(11))(_ + _).run(seed)
+//    assert(i === 21)
+//  }
+//
+//  it can "flatmap a result" in {
+//    val (i, r) = State.unit(10).flatMap(x ⇒ State.unit(x + 1)).run(seed)
+//    assert(i === 11)
+//  }
+    
 }
