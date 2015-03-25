@@ -77,7 +77,7 @@ object Par {
   def map[A, B](pa: Par[A])(f: A ⇒ B): Par[B] =
     map2(pa, unit(()))((a, _) ⇒ f(a))
 
-  def sortPar(parList: Par[List[Int]]) = map(parList)(_.sorted)
+  def sortPar(parList: Par[List[Int]]): Par[List[Int]] = map(parList)(_.sorted)
 
   // EXERCISE 5: Implement product and map as primitives, then define map2 in terms of them.
   // map2 is actually doing two things—
