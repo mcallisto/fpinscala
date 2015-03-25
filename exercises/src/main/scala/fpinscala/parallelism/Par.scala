@@ -43,8 +43,17 @@ object Par {
   def sum(as: IndexedSeq[Int]): Par[Int] =
     if (as.size <= 1) Par.unit(as.headOption getOrElse 0)
     else {
+//      println("p " +as)
       val (l, r) = as.splitAt(as.length / 2)
-      Par.map2(sum(l), sum(r))(_ + _)
+      Par.map2(Par.fork(sum(l)), Par.fork(sum(r)))(_ + _)
+    }
+  
+  def sumSerial(as: IndexedSeq[Int]): Int =
+    if (as.size <= 1) as.headOption getOrElse 0
+    else {
+//      println(as)
+      val (l, r) = as.splitAt(as.length / 2)
+      sumSerial(l) + sumSerial(r)
     }
 
   // This is the simplest and most natural implementation of `fork`, but there are some problems with it
