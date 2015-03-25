@@ -12,6 +12,7 @@ class chapter7FlatTests extends FlatSpec {
   "The Par library for parallel computation" can "sum a sequence of ints" in {
     val s = (0 to 10).toVector
     assert(Par.run(pool)(Par.sum(s)).get() === 55)
+    assert(Par.run(pool)(Par.sum3(s)).get() === 55)
     assert(Par.sumSerial(s) === 55)
   }
   
@@ -28,6 +29,7 @@ class chapter7FlatTests extends FlatSpec {
   it can "find a max in a sequence of ints" in {
     val s = (0 to 10).toVector
     assert(Par.run(pool)(Par.max(s)).get() === 10)
+    assert(Par.run(pool)(Par.max3(s)).get() === 10)
   }
   
 }

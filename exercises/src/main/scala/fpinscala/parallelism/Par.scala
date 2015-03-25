@@ -43,15 +43,15 @@ object Par {
   def sum(as: IndexedSeq[Int]): Par[Int] =
     if (as.size <= 1) Par.unit(as.headOption getOrElse 0)
     else {
-//      println("p " +as)
+      //      println("p " +as)
       val (l, r) = as.splitAt(as.length / 2)
       Par.map2(Par.fork(sum(l)), Par.fork(sum(r)))(_ + _)
     }
-  
+
   def sumSerial(as: IndexedSeq[Int]): Int =
     if (as.size <= 1) as.headOption getOrElse 0
     else {
-//      println(as)
+      //      println(as)
       val (l, r) = as.splitAt(as.length / 2)
       sumSerial(l) + sumSerial(r)
     }
@@ -129,11 +129,25 @@ object Par {
   def max(as: IndexedSeq[Int]): Par[Int] =
     if (as.size <= 1) Par.unit(as.headOption getOrElse Int.MinValue)
     else {
-//      println("p " +as)
+      //      println("p " +as)
       val (l, r) = as.splitAt(as.length / 2)
       Par.map2(Par.fork(max(l)), Par.fork(max(r)))((ll, rr) => if (ll > rr) ll else rr)
-    }  
+    }
+
+  def fold[A](as: IndexedSeq[A])(z: A)(f: (A, A) ⇒ A): Par[A] = as match {
+    case Vector()      ⇒ Par.unit(z)
+    case v +: Vector() ⇒ Par.unit(v)
+    case _ ⇒
+      val (l, r) = as.splitAt(as.length / 2)
+      Par.map2(Par.fork(fold(l)(z)(f)), Par.fork(fold(r)(z)(f)))(f)
+  }
   
+  def max3(as: IndexedSeq[Int]): Par[Int] =
+    fold(as)(Int.MinValue)((a, b) => if (a > b) a else b)
+    
+  def sum3(as: IndexedSeq[Int]): Par[Int] =
+    fold(as)(0)(_ + _)
+
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
 
