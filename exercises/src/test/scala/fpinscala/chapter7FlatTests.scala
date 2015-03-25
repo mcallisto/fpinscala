@@ -24,4 +24,10 @@ class chapter7FlatTests extends FlatSpec {
     val l = List(1, 2, 3)
     assert(Par.run(pool)(Par.parFilter(l)(_ > 1)).get() == List(2, 3))
   }
+  
+  it can "find a max in a sequence of ints" in {
+    val s = (0 to 10).toVector
+    assert(Par.run(pool)(Par.max(s)).get() === 10)
+  }
+  
 }

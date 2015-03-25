@@ -126,6 +126,14 @@ object Par {
     map(sequence(pars))(_.flatten) // convenience method on `List` for concatenating a list of lists
   }
 
+  def max(as: IndexedSeq[Int]): Par[Int] =
+    if (as.size <= 1) Par.unit(as.headOption getOrElse Int.MinValue)
+    else {
+//      println("p " +as)
+      val (l, r) = as.splitAt(as.length / 2)
+      Par.map2(Par.fork(max(l)), Par.fork(max(r)))((ll, rr) => if (ll > rr) ll else rr)
+    }  
+  
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
 
