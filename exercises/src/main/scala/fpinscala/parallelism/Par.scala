@@ -148,6 +148,20 @@ object Par {
   def sumF(as: IndexedSeq[Int]): Par[Int] =
     fold(as)(0)(_ + _)
 
+  def fold2[A, B](as: List[A])(z: B)(e: A ⇒ B)(f: (B, B) ⇒ B): Par[B] = as match {
+    case Nil      ⇒ Par.unit(z)
+    case v +: Nil ⇒ Par.unit(e(v))
+    case _ ⇒
+      val (l, r) = as.splitAt(as.length / 2)
+      Par.map2(Par.fork(fold2(l)(z)(e)(f)), Par.fork(fold2(r)(z)(e)(f)))(f)
+  }
+  
+  def totalWordsF(as: List[String]): Par[Int] = {
+    def countWords(s: String): Int = s.split("\\W+").size
+      
+    fold2(as)(0)(countWords)(_ + _)
+  }
+  
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
 

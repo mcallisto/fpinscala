@@ -32,4 +32,9 @@ class chapter7FlatTests extends FlatSpec {
     assert(Par.run(pool)(Par.maxF(s)).get() === 10)
   }
   
+  it can "sum the word counts in a list of strings" in {
+    val ls = List("ljklhklhs lhkdhklhd lhdjhdkhjjksjkjak a", "ljklj ljkjl jj", "qweqwe eqewqe", "j")
+    assert(Par.run(pool)(Par.totalWordsF(ls)).get() === 10)
+  }
+  
 }
