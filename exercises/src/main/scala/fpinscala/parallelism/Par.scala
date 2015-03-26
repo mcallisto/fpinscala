@@ -142,10 +142,10 @@ object Par {
       Par.map2(Par.fork(fold(l)(z)(f)), Par.fork(fold(r)(z)(f)))(f)
   }
   
-  def max3(as: IndexedSeq[Int]): Par[Int] =
-    fold(as)(Int.MinValue)((a, b) => if (a > b) a else b)
+  def maxF(as: IndexedSeq[Int]): Par[Int] =
+    fold(as)(Int.MinValue)((a, b) ⇒ if (a > b) a else b)
     
-  def sum3(as: IndexedSeq[Int]): Par[Int] =
+  def sumF(as: IndexedSeq[Int]): Par[Int] =
     fold(as)(0)(_ + _)
 
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
