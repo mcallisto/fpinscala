@@ -161,6 +161,21 @@ object Par {
       
     fold2(as)(0)(countWords)(_ + _)
   }
+
+  def map3[A, B, C, D](a: Par[A], b: Par[B], c: Par[C])(f: (A, B, C) ⇒ D): Par[D] = {
+    val ab = map2(a, b)((aa, bb) => (aa, bb))
+    map2(ab, c)((ab, cc) => f(ab._1, ab._2, cc))
+  }
+
+  def map4[A, B, C, D, E](a: Par[A], b: Par[B], c: Par[C], d: Par[D])(f: (A, B, C, D) ⇒ E): Par[E] = {
+    val abc = map3(a, b, c)((aa, bb, cc) => (aa, bb, cc))
+    map2(abc, d)((abc, dd) => f(abc._1, abc._2, abc._3, dd))
+  }
+
+  def map5[A, B, C, D, E, F](a: Par[A], b: Par[B], c: Par[C], d: Par[D], e: Par[E])(f: (A, B, C, D, E) ⇒ F): Par[F] = {
+    val abcd = map4(a, b, c, d)((aa, bb, cc, dd) => (aa, bb, cc, dd))
+    map2(abcd, e)((abcd, ee) => f(abcd._1, abcd._2, abcd._3, abcd._4, ee))
+  }
   
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
