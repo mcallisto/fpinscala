@@ -184,18 +184,19 @@ object Par {
     es ⇒ fa(es)
 
   def choiceN[A](a: Par[Int])(choices: List[Par[A]]): Par[A] =
-//    es ⇒ choices(run(es)(a).get())(es)
-    es ⇒ {
-      val ind = run(es)(a).get // Full source files
-      run(es)(choices(ind))
-    }
+    es ⇒ choices(run(es)(a).get())(es)
+//    es ⇒ {
+//      val ind = run(es)(a).get // Full source files
+//      run(es)(choices(ind))
+//    }
 
   def choiceViaChoiceN[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
-    es ⇒ {
-      val l = List(t, f)
-      val p = unit(if (run(es)(cond).get) 0 else 1)
-      choiceN(p)(l)(es)
-    }
+    choiceN(map(cond)(x ⇒ if (x) 0 else 1))(List(t, f))
+//    es ⇒ {
+//      val l = List(t, f)
+//      val p = unit(if (run(es)(cond).get) 0 else 1)
+//      choiceN(p)(l)(es)
+//    }
 
   def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
     es ⇒
