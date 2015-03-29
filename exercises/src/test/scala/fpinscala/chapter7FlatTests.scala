@@ -41,12 +41,14 @@ class chapter7FlatTests extends FlatSpec {
     val n = Par.unit(true)
     assert(Par.run(pool)(Par.choice(n)(Par.unit(1), Par.unit(2))).get() === 1)
     assert(Par.run(pool)(Par.choiceViaChoiceN(n)(Par.unit(1), Par.unit(2))).get() === 1)
+    assert(Par.run(pool)(Par.choiceViaChooser(n)(Par.unit(1), Par.unit(2))).get() === 1)
   }
   
   it can "choose among n given computations" in {
     val n = Par.unit(2)
     val l = List(Par.unit(1), Par.unit(2), Par.unit(3))
     assert(Par.run(pool)(Par.choiceN(n)(l)).get() === 3)
+    assert(Par.run(pool)(Par.choiceNViaChooser(n)(l)).get() === 3)
   }
   
 }
