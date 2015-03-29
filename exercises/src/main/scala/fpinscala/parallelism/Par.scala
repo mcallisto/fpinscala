@@ -135,30 +135,30 @@ object Par {
     }
 
   def fold[A](as: IndexedSeq[A])(z: A)(f: (A, A) ⇒ A): Par[A] = as match {
-    case Vector()      ⇒ Par.unit(z)
+    case Vector() ⇒ Par.unit(z)
     case v +: Vector() ⇒ Par.unit(v)
     case _ ⇒
       val (l, r) = as.splitAt(as.length / 2)
       Par.map2(Par.fork(fold(l)(z)(f)), Par.fork(fold(r)(z)(f)))(f)
   }
-  
+
   def maxF(as: IndexedSeq[Int]): Par[Int] =
     fold(as)(Int.MinValue)((a, b) ⇒ if (a > b) a else b)
-    
+
   def sumF(as: IndexedSeq[Int]): Par[Int] =
     fold(as)(0)(_ + _)
 
   def fold2[A, B](as: List[A])(z: B)(e: A ⇒ B)(f: (B, B) ⇒ B): Par[B] = as match {
-    case Nil      ⇒ Par.unit(z)
+    case Nil ⇒ Par.unit(z)
     case v +: Nil ⇒ Par.unit(e(v))
     case _ ⇒
       val (l, r) = as.splitAt(as.length / 2)
       Par.map2(Par.fork(fold2(l)(z)(e)(f)), Par.fork(fold2(r)(z)(e)(f)))(f)
   }
-  
+
   def totalWordsF(as: List[String]): Par[Int] = {
     def countWords(s: String): Int = s.split("\\W+").size
-      
+
     fold2(as)(0)(countWords)(_ + _)
   }
 
@@ -176,17 +176,35 @@ object Par {
     val abcd = map4(a, b, c, d)((aa, bb, cc, dd) ⇒ (aa, bb, cc, dd))
     map2(abcd, e)((abcd, ee) ⇒ f(abcd._1, abcd._2, abcd._3, abcd._4, ee))
   }
-  
+
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
 
   def delay[A](fa: ⇒ Par[A]): Par[A] =
     es ⇒ fa(es)
 
+  def choiceN[A](a: Par[Int])(choices: List[Par[A]]): Par[A] =
+//    es ⇒ choices(run(es)(a).get())(es)
+    es ⇒ {
+      val ind = run(es)(a).get // Full source files
+      run(es)(choices(ind))
+    }
+
+  def choiceViaChoiceN[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    es ⇒ {
+      val l = List(t, f)
+      val p = unit(if (run(es)(cond).get) 0 else 1)
+      choiceN(p)(l)(es)
+    }
+
   def choice[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
     es ⇒
       if (run(es)(cond).get) t(es) // Notice we are blocking on the result of `cond`.
       else f(es)
+
+  def choiceMap[A, B](a: Par[A])(choices: Map[A, Par[B]]): Par[B] = {
+    es ⇒ choices(run(es)(a).get())(es)
+  }
 
   /* Gives us infix syntax for `Par`. */
   implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
