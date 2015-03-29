@@ -207,14 +207,23 @@ object Par {
     es ⇒ choices(run(es)(a).get())(es)
   }
   
-  def chooser[A,B](a: Par[A])(choices: A => Par[B]): Par[B] = 
-    es ⇒ choices(run(es)(a).get())(es)
+  def flatMap[A, B](a: Par[A])(f: A => Par[B]): Par[B] = 
+    es ⇒ f(run(es)(a).get())(es)
     
-  def choiceViaChooser[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
-    chooser(map(cond)(x ⇒ if (x) 0 else 1))(List(t, f))
+  def choiceViaFlatMap[A](cond: Par[Boolean])(t: Par[A], f: Par[A]): Par[A] =
+    flatMap(map(cond)(x ⇒ if (x) 0 else 1))(List(t, f))
     
-  def choiceNViaChooser[A](a: Par[Int])(choices: List[Par[A]]): Par[A] =
-    chooser(a)(choices(_))    
+  def choiceNViaFlatMap[A](a: Par[Int])(choices: List[Par[A]]): Par[A] =
+    flatMap(a)(choices(_))
+    
+  def join[A](a: Par[Par[A]]): Par[A] =
+    es ⇒ run(es)(a).get()(es)
+
+  def joinViaFlatMap[A](a: Par[Par[A]]): Par[A] =
+    flatMap(a)(identity)
+    
+  def flatMapViaJoin[A, B](a: Par[A])(f: A => Par[B]): Par[B] = 
+    join(map(a)(f))
 
   /* Gives us infix syntax for `Par`. */
   implicit def toParOps[A](p: Par[A]): ParOps[A] = new ParOps(p)
